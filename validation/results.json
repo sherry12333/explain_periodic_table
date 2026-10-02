@@ -1,0 +1,711 @@
+{
+  "environment": {
+    "python": "3.11.5",
+    "numpy": "1.26.2",
+    "scipy": "1.14.0"
+  },
+  "method": "spin-unpolarised spherical X-alpha, alpha=1, fixed occupations",
+  "not_claimed": [
+    "MATLAB parity",
+    "experimental accuracy",
+    "spin-polarised open-shell ground states"
+  ],
+  "hydrogen": [
+    {
+      "intervals": 24,
+      "energy": -0.4999998747883093,
+      "absolute_error_vs_minus_half": 1.2521169068246962e-07
+    },
+    {
+      "intervals": 48,
+      "energy": -0.4999999981991008,
+      "absolute_error_vs_minus_half": 1.8008992075380093e-09
+    },
+    {
+      "intervals": 96,
+      "energy": -0.4999999999693044,
+      "absolute_error_vs_minus_half": 3.069561271829002e-11
+    }
+  ],
+  "atoms": {
+    "He": {
+      "runs": {
+        "base": {
+          "settings": {
+            "intervals": 100,
+            "rmax": 35.0,
+            "quadrature": 8
+          },
+          "neutral": {
+            "Z": 2,
+            "occupations": {
+              "1s": 2.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -3.170112243751022,
+            "electron_count": 1.9999999999999998,
+            "iterations": 43,
+            "density_residual": 9.336965252876718e-09,
+            "energy_change_hartree": 2.220446049250313e-15,
+            "relative_eigen_residual": 1.2579346816716444e-12,
+            "orbital_energies_hartree": {
+              "1s": -0.7353239255868074
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 2,
+            "occupations": {
+              "1s": 1.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -2.013386636220382,
+            "electron_count": 1.0000000000000002,
+            "iterations": 41,
+            "density_residual": 8.230959263070132e-09,
+            "energy_change_hartree": 8.881784197001252e-16,
+            "relative_eigen_residual": 9.922394386176883e-13,
+            "orbital_energies_hartree": {
+              "1s": -1.6010870333962108
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 1.1567256075306402
+        },
+        "fine": {
+          "settings": {
+            "intervals": 140,
+            "rmax": 35.0,
+            "quadrature": 8
+          },
+          "neutral": {
+            "Z": 2,
+            "occupations": {
+              "1s": 2.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -3.1701122438818956,
+            "electron_count": 1.9999999999999987,
+            "iterations": 43,
+            "density_residual": 9.337366702945073e-09,
+            "energy_change_hartree": 6.217248937900877e-15,
+            "relative_eigen_residual": 7.204361220008946e-13,
+            "orbital_energies_hartree": {
+              "1s": -0.7353239255547263
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 2,
+            "occupations": {
+              "1s": 1.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -2.013386636344174,
+            "electron_count": 1.0,
+            "iterations": 41,
+            "density_residual": 8.230877436271948e-09,
+            "energy_change_hartree": 7.105427357601002e-15,
+            "relative_eigen_residual": 1.6965050010713372e-12,
+            "orbital_energies_hartree": {
+              "1s": -1.6010870334539553
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 1.1567256075377217
+        },
+        "larger_box": {
+          "settings": {
+            "intervals": 140,
+            "rmax": 50.0,
+            "quadrature": 8
+          },
+          "neutral": {
+            "Z": 2,
+            "occupations": {
+              "1s": 2.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -3.170112243864577,
+            "electron_count": 1.9999999999999993,
+            "iterations": 43,
+            "density_residual": 9.337045907439152e-09,
+            "energy_change_hartree": 5.329070518200751e-15,
+            "relative_eigen_residual": 1.089766148005132e-12,
+            "orbital_energies_hartree": {
+              "1s": -0.7353239255625486
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 2,
+            "occupations": {
+              "1s": 1.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -2.013386636330044,
+            "electron_count": 1.0,
+            "iterations": 41,
+            "density_residual": 8.23117960344439e-09,
+            "energy_change_hartree": 2.220446049250313e-15,
+            "relative_eigen_residual": 6.814156397623742e-13,
+            "orbital_energies_hartree": {
+              "1s": -1.6010870334411231
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 1.1567256075345331
+        },
+        "higher_quadrature": {
+          "settings": {
+            "intervals": 100,
+            "rmax": 35.0,
+            "quadrature": 12
+          },
+          "neutral": {
+            "Z": 2,
+            "occupations": {
+              "1s": 2.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -3.1701122437510643,
+            "electron_count": 2.0,
+            "iterations": 43,
+            "density_residual": 9.33722267558414e-09,
+            "energy_change_hartree": 1.3322676295501878e-15,
+            "relative_eigen_residual": 2.466053184630302e-13,
+            "orbital_energies_hartree": {
+              "1s": -0.7353239255824615
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 2,
+            "occupations": {
+              "1s": 1.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -2.0133866362203827,
+            "electron_count": 1.0000000000000002,
+            "iterations": 41,
+            "density_residual": 8.230941294539341e-09,
+            "energy_change_hartree": 4.440892098500626e-16,
+            "relative_eigen_residual": 1.8693641772952253e-13,
+            "orbital_energies_hartree": {
+              "1s": -1.6010870333912748
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 1.1567256075306815
+        }
+      },
+      "changes": {
+        "neutral_grid_delta_hartree": 1.308735342320233e-10,
+        "ion_grid_delta_hartree": 1.237920876917542e-10,
+        "ionisation_grid_delta_hartree": 7.0814465402690985e-12,
+        "ionisation_box_delta_hartree": 3.1885605267234496e-12,
+        "ionisation_quadrature_delta_hartree": 4.1300296516055823e-14
+      },
+      "acceptance_limits": {
+        "neutral_grid_delta_hartree": 0.002,
+        "ion_grid_delta_hartree": 0.002,
+        "ionisation_grid_delta_hartree": 0.0002,
+        "ionisation_box_delta_hartree": 0.0002,
+        "ionisation_quadrature_delta_hartree": 0.0002
+      }
+    },
+    "Ne": {
+      "runs": {
+        "base": {
+          "settings": {
+            "intervals": 100,
+            "rmax": 35.0,
+            "quadrature": 8
+          },
+          "neutral": {
+            "Z": 10,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -133.06678358941267,
+            "electron_count": 10.0,
+            "iterations": 53,
+            "density_residual": 7.555467970800165e-09,
+            "energy_change_hartree": 2.842170943040401e-14,
+            "relative_eigen_residual": 3.472906438088418e-12,
+            "orbital_energies_hartree": {
+              "1s": -31.42228735881192,
+              "2s": -1.5367421039133862,
+              "2p": -0.6826407727358408
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 10,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 5.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -132.01847659191455,
+            "electron_count": 9.0,
+            "iterations": 50,
+            "density_residual": 7.70884940810829e-09,
+            "energy_change_hartree": 2.842170943040401e-14,
+            "relative_eigen_residual": 1.3535976756208922e-12,
+            "orbital_energies_hartree": {
+              "1s": -32.34141783014143,
+              "2s": -2.2930318571116515,
+              "2p": -1.4354200476145658
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 1.0483069974981163
+        },
+        "fine": {
+          "settings": {
+            "intervals": 140,
+            "rmax": 35.0,
+            "quadrature": 8
+          },
+          "neutral": {
+            "Z": 10,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -133.06678416758234,
+            "electron_count": 9.999999999999996,
+            "iterations": 53,
+            "density_residual": 7.555573129756528e-09,
+            "energy_change_hartree": 0.0,
+            "relative_eigen_residual": 2.0435436049846183e-12,
+            "orbital_energies_hartree": {
+              "1s": -31.422287571815723,
+              "2s": -1.536742111134195,
+              "2p": -0.6826407714157896
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 10,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 5.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -132.0184771716103,
+            "electron_count": 9.0,
+            "iterations": 50,
+            "density_residual": 7.7087226205134e-09,
+            "energy_change_hartree": 0.0,
+            "relative_eigen_residual": 1.7086838150975934e-12,
+            "orbital_energies_hartree": {
+              "1s": -32.34141804225273,
+              "2s": -2.2930318645718777,
+              "2p": -1.4354200458988398
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 1.048306995972041
+        },
+        "larger_box": {
+          "settings": {
+            "intervals": 140,
+            "rmax": 50.0,
+            "quadrature": 8
+          },
+          "neutral": {
+            "Z": 10,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -133.06678378954575,
+            "electron_count": 10.0,
+            "iterations": 53,
+            "density_residual": 7.563368157436572e-09,
+            "energy_change_hartree": 5.684341886080802e-14,
+            "relative_eigen_residual": 2.2527872475142404e-12,
+            "orbital_energies_hartree": {
+              "1s": -31.422287431114732,
+              "2s": -1.5367421085227027,
+              "2p": -0.6826407721839743
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 10,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 5.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -132.01847679313676,
+            "electron_count": 8.999999999999998,
+            "iterations": 50,
+            "density_residual": 7.708851992562993e-09,
+            "energy_change_hartree": 1.1368683772161603e-13,
+            "relative_eigen_residual": 2.1793089636292127e-12,
+            "orbital_energies_hartree": {
+              "1s": -32.34141790146403,
+              "2s": -2.293031861477897,
+              "2p": -1.4354200463410653
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 1.0483069964089964
+        },
+        "higher_quadrature": {
+          "settings": {
+            "intervals": 100,
+            "rmax": 35.0,
+            "quadrature": 12
+          },
+          "neutral": {
+            "Z": 10,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -133.0667835894144,
+            "electron_count": 10.000000000000002,
+            "iterations": 53,
+            "density_residual": 7.555549067434086e-09,
+            "energy_change_hartree": 5.684341886080802e-14,
+            "relative_eigen_residual": 5.765579906862033e-13,
+            "orbital_energies_hartree": {
+              "1s": -31.422287358818608,
+              "2s": -1.536742103914246,
+              "2p": -0.6826407727194808
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 10,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 5.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -132.01847659191606,
+            "electron_count": 9.000000000000004,
+            "iterations": 50,
+            "density_residual": 7.708887813667367e-09,
+            "energy_change_hartree": 2.842170943040401e-14,
+            "relative_eigen_residual": 1.2879789754990778e-12,
+            "orbital_energies_hartree": {
+              "1s": -32.341417830145176,
+              "2s": -2.2930318571098893,
+              "2p": -1.4354200476151435
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 1.0483069974983437
+        }
+      },
+      "changes": {
+        "neutral_grid_delta_hartree": 5.781696756912424e-07,
+        "ion_grid_delta_hartree": 5.796957509573986e-07,
+        "ionisation_grid_delta_hartree": 1.5260752661561128e-09,
+        "ionisation_box_delta_hartree": 4.369553607830312e-10,
+        "ionisation_quadrature_delta_hartree": 2.2737367544323206e-13
+      },
+      "acceptance_limits": {
+        "neutral_grid_delta_hartree": 0.002,
+        "ion_grid_delta_hartree": 0.002,
+        "ionisation_grid_delta_hartree": 0.0002,
+        "ionisation_box_delta_hartree": 0.0002,
+        "ionisation_quadrature_delta_hartree": 0.0002
+      }
+    },
+    "K": {
+      "runs": {
+        "base": {
+          "settings": {
+            "intervals": 100,
+            "rmax": 35.0,
+            "quadrature": 8
+          },
+          "neutral": {
+            "Z": 19,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0,
+              "3s": 2.0,
+              "3p": 6.0,
+              "4s": 1.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -611.9155516388013,
+            "electron_count": 19.0,
+            "iterations": 58,
+            "density_residual": 8.637038950046714e-09,
+            "energy_change_hartree": 2.2737367544323206e-13,
+            "relative_eigen_residual": 1.3038389648023502e-12,
+            "orbital_energies_hartree": {
+              "1s": -131.03128268647455,
+              "2s": -13.509702460549448,
+              "3s": -1.4566520632511888,
+              "4s": -0.10578301993427974,
+              "2p": -10.983938226368421,
+              "3p": -0.8472593186355705
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 19,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0,
+              "3s": 2.0,
+              "3p": 6.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -611.7362856808066,
+            "electron_count": 18.0,
+            "iterations": 52,
+            "density_residual": 8.20175736404509e-09,
+            "energy_change_hartree": 0.0,
+            "relative_eigen_residual": 3.3776663514345403e-13,
+            "orbital_energies_hartree": {
+              "1s": -131.27731147102878,
+              "2s": -13.755472074001018,
+              "3s": -1.7005855061119137,
+              "2p": -11.22970744083262,
+              "3p": -1.089231787560398
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 0.1792659579946303
+        },
+        "fine": {
+          "settings": {
+            "intervals": 140,
+            "rmax": 35.0,
+            "quadrature": 8
+          },
+          "neutral": {
+            "Z": 19,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0,
+              "3s": 2.0,
+              "3p": 6.0,
+              "4s": 1.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -611.9156027716805,
+            "electron_count": 18.999999999999996,
+            "iterations": 58,
+            "density_residual": 8.637306356641012e-09,
+            "energy_change_hartree": 1.1368683772161603e-13,
+            "relative_eigen_residual": 1.1660296568205475e-12,
+            "orbital_energies_hartree": {
+              "1s": -131.03130341592538,
+              "2s": -13.509703212210262,
+              "3s": -1.456652137079197,
+              "4s": -0.10578302293979111,
+              "2p": -10.983938173079054,
+              "3p": -0.8472593036505607
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 19,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0,
+              "3s": 2.0,
+              "3p": 6.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -611.7363368081603,
+            "electron_count": 18.0,
+            "iterations": 52,
+            "density_residual": 8.202868020627762e-09,
+            "energy_change_hartree": 2.2737367544323206e-13,
+            "relative_eigen_residual": 2.2162864353713186e-12,
+            "orbital_energies_hartree": {
+              "1s": -131.27733220690618,
+              "2s": -13.755472831293098,
+              "3s": -1.70058558574013,
+              "2p": -11.229707392983183,
+              "3p": -1.0892317779006926
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 0.17926596352015167
+        },
+        "larger_box": {
+          "settings": {
+            "intervals": 140,
+            "rmax": 50.0,
+            "quadrature": 8
+          },
+          "neutral": {
+            "Z": 19,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0,
+              "3s": 2.0,
+              "3p": 6.0,
+              "4s": 1.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -611.9155582162833,
+            "electron_count": 18.999999999999996,
+            "iterations": 58,
+            "density_residual": 8.89919477754072e-09,
+            "energy_change_hartree": 2.2737367544323206e-13,
+            "relative_eigen_residual": 3.1091335639356224e-13,
+            "orbital_energies_hartree": {
+              "1s": -131.03128524488338,
+              "2s": -13.509702667507158,
+              "3s": -1.4566520877841425,
+              "4s": -0.10578302087733435,
+              "2p": -10.983938187165059,
+              "3p": -0.8472593118890073
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 19,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0,
+              "3s": 2.0,
+              "3p": 6.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -611.7362922562453,
+            "electron_count": 18.0,
+            "iterations": 52,
+            "density_residual": 8.202676195605883e-09,
+            "energy_change_hartree": 1.1368683772161603e-13,
+            "relative_eigen_residual": 1.489288969536269e-12,
+            "orbital_energies_hartree": {
+              "1s": -131.2773140319492,
+              "2s": -13.75547228338387,
+              "3s": -1.7005855331263868,
+              "2p": -11.229707404056809,
+              "3p": -1.0892317831298797
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 0.17926596003803752
+        },
+        "higher_quadrature": {
+          "settings": {
+            "intervals": 100,
+            "rmax": 35.0,
+            "quadrature": 12
+          },
+          "neutral": {
+            "Z": 19,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0,
+              "3s": 2.0,
+              "3p": 6.0,
+              "4s": 1.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -611.9155516388072,
+            "electron_count": 18.999999999999996,
+            "iterations": 58,
+            "density_residual": 8.637068930005242e-09,
+            "energy_change_hartree": 1.1368683772161603e-13,
+            "relative_eigen_residual": 1.1193743998698986e-12,
+            "orbital_energies_hartree": {
+              "1s": -131.03128268646913,
+              "2s": -13.50970246054952,
+              "3s": -1.4566520632530384,
+              "4s": -0.10578301993373382,
+              "2p": -10.98393822634754,
+              "3p": -0.8472593186276818
+            },
+            "converged": true
+          },
+          "ion": {
+            "Z": 19,
+            "occupations": {
+              "1s": 2.0,
+              "2s": 2.0,
+              "2p": 6.0,
+              "3s": 2.0,
+              "3p": 6.0
+            },
+            "alpha": 1.0,
+            "total_energy_hartree": -611.7362856808121,
+            "electron_count": 18.0,
+            "iterations": 52,
+            "density_residual": 8.20285688904968e-09,
+            "energy_change_hartree": 1.1368683772161603e-13,
+            "relative_eigen_residual": 1.1231372371497777e-12,
+            "orbital_energies_hartree": {
+              "1s": -131.27731147103023,
+              "2s": -13.755472074000117,
+              "3s": -1.7005855061128055,
+              "2p": -11.229707440819546,
+              "3p": -1.0892317875602768
+            },
+            "converged": true
+          },
+          "ionisation_energy_hartree": 0.17926595799508505
+        }
+      },
+      "changes": {
+        "neutral_grid_delta_hartree": 5.113287920721632e-05,
+        "ion_grid_delta_hartree": 5.1127353685842536e-05,
+        "ionisation_grid_delta_hartree": 5.525521373783704e-09,
+        "ionisation_box_delta_hartree": 3.4821141525753774e-09,
+        "ionisation_quadrature_delta_hartree": 4.547473508864641e-13
+      },
+      "acceptance_limits": {
+        "neutral_grid_delta_hartree": 0.002,
+        "ion_grid_delta_hartree": 0.002,
+        "ionisation_grid_delta_hartree": 0.0002,
+        "ionisation_box_delta_hartree": 0.0002,
+        "ionisation_quadrature_delta_hartree": 0.0002
+      }
+    }
+  },
+  "helium_dirac_exchange_example": {
+    "Z": 2,
+    "occupations": {
+      "1s": 2.0
+    },
+    "alpha": 0.6666666666666666,
+    "total_energy_hartree": -2.72363979244151,
+    "electron_count": 1.9999999999999998,
+    "iterations": 46,
+    "density_residual": 8.721991420035245e-09,
+    "energy_change_hartree": 1.3322676295501878e-15,
+    "relative_eigen_residual": 6.697565522926135e-13,
+    "orbital_energies_hartree": {
+      "1s": -0.5169681949926701
+    },
+    "converged": true
+  }
+}

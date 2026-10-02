@@ -1,0 +1,45 @@
+{
+  "model": "spherical spin-unpolarised exchange-only X-alpha",
+  "grid": {
+    "intervals": 100,
+    "rmax_bohr": 35.0,
+    "order": 4,
+    "quadrature_per_interval": 8,
+    "stretch": 5.0
+  },
+  "neutral": {
+    "Z": 2,
+    "occupations": {
+      "1s": 2.0
+    },
+    "alpha": 1.0,
+    "total_energy_hartree": -3.170112243751022,
+    "electron_count": 1.9999999999999998,
+    "iterations": 43,
+    "density_residual": 9.336965252876718e-09,
+    "energy_change_hartree": 2.220446049250313e-15,
+    "relative_eigen_residual": 1.2579346816716444e-12,
+    "orbital_energies_hartree": {
+      "1s": -0.7353239255868074
+    },
+    "converged": true
+  },
+  "ion": {
+    "Z": 2,
+    "occupations": {
+      "1s": 1.0
+    },
+    "alpha": 1.0,
+    "total_energy_hartree": -2.013386636220382,
+    "electron_count": 1.0000000000000002,
+    "iterations": 41,
+    "density_residual": 8.230959263070132e-09,
+    "energy_change_hartree": 8.881784197001252e-16,
+    "relative_eigen_residual": 9.922394386176883e-13,
+    "orbital_energies_hartree": {
+      "1s": -1.6010870333962108
+    },
+    "converged": true
+  },
+  "ionisation_energy_hartree": 1.1567256075306402
+}

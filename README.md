@@ -1,43 +1,97 @@
 # Atomic Electronic-Structure Calculations
 
-Originally developed in MATLAB as a computational physics coursework project. This repository also contains a Python port under development. **The Python solver has not been validated against MATLAB; neither uploaded example is currently presented as a verified reference calculation.**
+A MATLAB coursework project with a tested Python numerical reimplementation.
+The Python version uses radial B-splines, Gaussian quadrature and self-consistent
+atomic X-alpha calculations. **It is an educational, exchange-only model, not a
+general-purpose or experimentally validated DFT package.**
 
-The two languages implement the same project, not two independent research projects. The project explores self-consistent atomic electronic-structure calculations using B-splines and Gaussian quadrature. The precise exchange approximation and total-energy expression still need to be checked against the original coursework description before making quantitative accuracy claims.
+## Two implementations, one project
 
-## Repository layout
+| Directory | Role |
+| --- | --- |
+| `matlab/` | Original uploaded coursework code, unchanged; not a verified runnable benchmark |
+| `python/` | New solver, command-line example and notebook |
+| `tests/` | Analytic, input-validation and end-to-end tests |
+| `validation/` | Reproducible mesh/box/quadrature study and measured results |
+| `archive/` | Historical, unvalidated AI-assisted translation; not used by the solver |
 
-| Directory | Purpose | Status |
-| --- | --- | --- |
-| `matlab/` | Original uploaded coursework implementation | Preserved unchanged; example configuration needs repair |
-| `python/` | Python functions and demonstration notebook | Development draft; known numerical/runtime blockers |
-| `validation/` | Repair sequence and comparison criteria | No validated reference results yet |
-| `archive/` | Original README and notebook | Historical snapshot, not the active entry point |
+This version replaces the earlier Python draft; it does not preserve its function
+API. The original MATLAB work and the subsequent Python reimplementation should
+be described separately in a portfolio. The new implementation and tests were
+prepared with AI assistance. Master's thesis code is not included.
 
-The active notebook imports `python/modules.py` instead of maintaining duplicate function definitions. Its historical calculation example is disabled pending repair. The original notebook is retained for comparison, including its saved error output.
+## Quick start
 
-## Inspect the Python draft
-
-From the repository root, create an environment:
+Python 3.10 or newer is required. From the repository root:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+python python/run_atom.py He --ion
+python python/run_atom.py Ne --ion
+python python/run_atom.py K --ion
+python -m unittest discover -s tests -v
+python validation/run_validation.py
 python -m jupyter lab python/periodic_table.ipynb
 ```
 
-These commands open the development notebook; they do not establish that the solver works. The dependency list is an initial list, not a numerically validated or locked environment. See [validation plan](validation/PLAN.md) before enabling calculations.
+On Windows, activate with `.venv\Scripts\activate`. Only NumPy and SciPy are
+needed for the CLI and tests; Matplotlib/JupyterLab are for the notebook.
+The CLI prints energies in Hartree, occupations, electron count, convergence
+residuals and iteration count. `--output file.json` saves the same report.
+An unconverged calculation raises an error rather than silently reporting success.
 
-## Contributions and provenance
+## Model and deliberate changes
 
-The MATLAB work originated in a university coursework project. The repository owner reports that the Python translation may have been AI-assisted; its exact provenance and completeness are not yet confirmed. Publication of a Python file is not evidence that its output is correct.
+- Atomic units: lengths in Bohr, energies in Hartree.
+- Spherical density and spin-unpolarised exchange; fixed subshell occupations.
+- No correlation, spin polarisation, relativistic corrections or automatic
+  ground-state configuration search. Open-shell ions and K are spherical-average
+  approximations, not spin-resolved ground-state calculations.
+- `alpha=1` matches the exchange-potential coefficient in the uploaded MATLAB
+  expression. `--alpha 0.6666666666666666` selects the standard spin-unpolarised
+  Dirac exchange coefficient. These choices have different energies.
+- A variational B-spline Poisson solve replaces the fragile collocation/handwritten
+  LU path. SciPy's symmetric generalised eigensolver supplies sorted, overlap-
+  normalised eigenvectors. Gaussian nodes avoid division by zero at the origin.
+- Total energy is evaluated as `sum(occupation * <P|H0|P>) + EH + Ex`, where
+  `EH = 1/2 integral(q*VH dr)` and `Ex = 3/4 integral(q*vx dr)`.
+  The old code subtracted half of the combined Hartree and exchange potential
+  from the occupied eigenvalue sum; that exchange correction is inconsistent
+  with this functional. Thus new total energies need not match the old formula.
+- K uses `...3p6 4s1`; K+ uses `...3p6`. The ambiguous old example's occupation
+  array is not treated as a validated configuration.
 
-This local reorganisation preserves the MATLAB and Python source files byte-for-byte. It changes documentation and the active notebook structure only. No new software licence is assigned: author contributions and any reused course code should be established first. This repository is separate from the owner's master's thesis code.
+See [method details](validation/METHOD.md) and [verification report](validation/REPORT.md).
+Tests establish the checks described there, not absence of all possible bugs.
+No successful original MATLAB reference run has been supplied or reproduced.
 
-## Next milestone
+## Python use
 
-Reproduce one verified MATLAB atomic calculation, repair the Python numerical primitives, and compare both implementations with identical parameters. Only after that should this project claim a validated Python implementation. Planned tests cover B-spline behaviour, quadrature, generalised eigenproblem residuals, density normalisation, and self-consistent convergence.
+When working inside the `python/` directory:
 
-## 中文说明
+```python
+from modules import AtomicSolver
+solver = AtomicSolver(Z=2)
+neutral = solver.solve({(1, 0): 2})  # n=1, l=0, two electrons
+ion = solver.solve({(1, 0): 1})
+print(ion.total_energy - neutral.total_energy)
+```
 
-这是同一个课程项目的 MATLAB 原实现和 Python 移植草稿。Python 尚未完成结果验证；MATLAB 当前上传的示例也需要先修复参数问题。下一步先建立一个可信的参考算例，再完成 Python 修复和对比，而不是把能导入模块当作计算成功。
+`result.radius` contains positive quadrature nodes, `result.density` is rho(r),
+and `result.radial_density` is q(r)=4*pi*r^2*rho(r). Integrate q using
+`result.weights @ result.radial_density` to obtain electron number.
+
+## Provenance
+
+Original project: https://github.com/sherry12333/explain_periodic_table .
+Original files are retained for transparency; author/contributor permissions
+should be resolved before assigning a repository-wide licence.
+No new licence is assigned by this reorganisation.
+
+## 中文摘要
+
+这次是真正重写并测试了 Python 数值核心，不只是整理目录。提供 He、Ne、K
+及一价阳离子的运行入口、单元测试和结果报告。它是球对称、不区分自旋、仅含
+交换的教学模型；未声称与原 MATLAB 数值逐项一致，也不声称能准确预测实验电离能。

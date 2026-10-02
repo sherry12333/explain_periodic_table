@@ -1,572 +1,243 @@
+"""Spherical, spin-unpolarised atomic X-alpha solver in atomic units.
 
-#from pylab import * # needed for symbols in pyplot ::::: not with pylab inline     
-import numpy as np #                        #::::: not with pylab inline
-import scipy
-#from scipy import linalg                   # ::::: not with pylab inline ??     
-#from scipy import special  
-#from scipy import stats  
-from scipy.interpolate import InterpolatedUnivariateSpline 
-import matplotlib.pyplot as plt   
-import cmath  
-
-
-
-
+Numerical reimplementation of the coursework approach, NOT a drop-in MATLAB
+translation. Fixed occupations; exchange only; no correlation or relativity.
+alpha=1 reproduces the exchange-potential coefficient in the uploaded MATLAB
+source; alpha=2/3 gives standard spin-unpolarised Dirac exchange.
+"""
+from dataclasses import dataclass
+from numbers import Integral
+import numpy as np
+from scipy.interpolate import BSpline
+from scipy.linalg import eigh, cho_factor, cho_solve
 
 
-def cal_ryo_E(eta, iteration, charge, epsilon0, N10, N20, N21, N30, N31, N32, N40, 
-              xarray_P, xarray_V, tknot_P, tknot_V, kord, Gauss_mat, parameter1, 
-              parameter2, l0, l1, l2, Z):
-    # Hydrogen-like solution
-    c0, D0, bhb_matrix0, BB_matrix0 = cal_eigen(xarray_P, tknot_P, kord, Gauss_mat, parameter1, parameter2, l0, Z)
-    c1, D1, bhb_matrix1, BB_matrix1 = cal_eigen(xarray_P, tknot_P, kord, Gauss_mat, parameter1, parameter2, l1, Z)
-    c2, D2, bhb_matrix2, BB_matrix1 = cal_eigen(xarray_P, tknot_P, kord, Gauss_mat, parameter1, parameter2, l2, Z)
-
-    E_hyd1 = D0[0, 0]
-    E_hyd2 = D0[1, 1]
-    E_hyd3 = D0[2, 2]
-
-    Bavx1, dBavx1, dB2avx1 = bsplgen(xarray_P, tknot_P, kord)
-
-    P10 = np.dot(Bavx1[:, 1:-1], c0[:, 0])
-    P20 = np.dot(Bavx1[:, 1:-1], c0[:, 1])
-    P21 = np.dot(Bavx1[:, 1:-1], c1[:, 0])
-    P30 = np.dot(Bavx1[:, 1:-1], c0[:, 2])
-    P31 = np.dot(Bavx1[:, 1:-1], c1[:, 1])
-    P32 = np.dot(Bavx1[:, 1:-1], c2[:, 0])
-    P40 = np.dot(Bavx1[:, 1:-1], c0[:, 3])
-
-    ryo_ne = (1 / (4 * np.pi)) * charge * (
-        N10 * (P10 / xarray_P) ** 2 + N20 * (P20 / xarray_P) ** 2 + N21 * (P21 / xarray_P) ** 2 +
-        N30 * (P30 / xarray_P) ** 2 + N31 * (P31 / xarray_P) ** 2 + N32 * (P32 / xarray_P) ** 2 +
-        N40 * (P40 / xarray_P) ** 2
-    )
-
-    RHS_ne = -xarray_P * ryo_ne * 4 * np.pi / (4 * np.pi * epsilon0)
-    RHS_ne[0] = RHS_ne[1]
-
-    dB2_matrix = build_matrix_dB2(xarray_P, dB2avx1, dBavx1)
-    c = l_u(dB2_matrix, RHS_ne)
-    dB_end_end_1 = dBavx1[-1, -2]
-    dB_end = dBavx1[-1, -1]
-    c_end_1 = c[-1]
-
-    c_end = (0 - dB_end_end_1) / dB_end * c_end_1
-    c = np.concatenate([[0], c, [c_end]])
-
-    # Electron potential is considered
-    bhb_V_ee_matrix_old = cal_V_ee_matrix(c, bhb_matrix0, c0, c1, c2, N10, N20, N21, N30, N31, N32, N40, charge, epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, Gauss_mat, parameter1, parameter2, l0, Z)
-    V_old = bhb_V_ee_matrix_old
-
-    eigen10 = np.zeros(iteration)
-    eigen20 = np.zeros(iteration)
-    eigen21 = np.zeros(iteration)
-    eigen30 = np.zeros(iteration)
-    eigen31 = np.zeros(iteration)
-    eigen32 = np.zeros(iteration)
-    eigen40 = np.zeros(iteration)
-
-    for i in range(iteration):
-        c0, D0 = cal_eigen1(bhb_V_ee_matrix_old, bhb_matrix0, BB_matrix0)
-        c1, D1 = cal_eigen1(bhb_V_ee_matrix_old, bhb_matrix1, BB_matrix1)
-        c2, D2 = cal_eigen1(bhb_V_ee_matrix_old, bhb_matrix2, BB_matrix1)
-
-        P10 = np.dot(Bavx1[:, 1:-1], c0[:, 0])
-        P20 = np.dot(Bavx1[:, 1:-1], c0[:, 1])
-        P21 = np.dot(Bavx1[:, 1:-1], c1[:, 0])
-        P30 = np.dot(Bavx1[:, 1:-1], c0[:, 2])
-        P31 = np.dot(Bavx1[:, 1:-1], c1[:, 1])
-        P32 = np.dot(Bavx1[:, 1:-1], c2[:, 0])
-        P40 = np.dot(Bavx1[:, 1:-1], c0[:, 3])
-
-        ryo_ne = (1 / (4 * np.pi)) * charge * (
-            N10 * (P10 / xarray_P) ** 2 + N20 * (P20 / xarray_P) ** 2 + N21 * (P21 / xarray_P) ** 2 +
-            N30 * (P30 / xarray_P) ** 2 + N31 * (P31 / xarray_P) ** 2 + N32 * (P32 / xarray_P) ** 2 +
-            N40 * (P40 / xarray_P) ** 2
-        )
-
-        RHS_ne = -xarray_P * ryo_ne * 4 * np.pi / (4 * np.pi * epsilon0)
-        RHS_ne[0] = RHS_ne[1]
-
-        dB2_matrix = build_matrix_dB2(xarray_P, dB2avx1, dBavx1)
-        c = l_u(dB2_matrix, RHS_ne)
-        dB_end_end_1 = dBavx1[-1, -2]
-        dB_end = dBavx1[-1, -1]
-        c_end_1 = c[-1]
-
-        c_end = (0 - dB_end_end_1) / dB_end * c_end_1
-        c = np.concatenate([[0], c, [c_end]])
-
-        eigen10[i] = D0[0, 0]
-        eigen20[i] = D0[1, 1]
-        eigen21[i] = D1[0, 0]
-        eigen30[i] = D0[2, 2]
-        eigen31[i] = D1[1, 1]
-        eigen32[i] = D2[0, 0]
-        eigen40[i] = D0[3, 3]
-
-        bhb_V_ee_matrix_new = cal_V_ee_matrix(c, bhb_matrix0, c0, c1, c2, N10, N20, N21, N30, N31, N32, N40, charge, epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, Gauss_mat, parameter1, parameter2, l0, Z)
-
-        V_new = bhb_V_ee_matrix_new
-        V_new = V_new * (1 - eta) + V_old * eta
-        V_old = V_new
-        bhb_V_ee_matrix_old = V_new
-
-    ryo_ne[0] = 0
-
-    size_c = c0.shape
-
-    E_orb10 = eigen10[-1]
-    E_orb20 = eigen20[-1]
-    E_orb21 = eigen21[-1]
-    E_orb30 = eigen30[-1]
-    E_orb31 = eigen31[-1]
-    E_orb32 = eigen32[-1]
-    E_orb40 = eigen40[-1]
-
-    sum10 = sum20 = sum21 = sum30 = sum31 = sum32 = sum40 = 0
-    for i in range(size_c[0]):
-        sum10 += np.dot(bhb_V_ee_matrix_new[i, :], c0[i, 0] * c0[:, 0])
-        sum20 += np.dot(bhb_V_ee_matrix_new[i, :], c0[i, 1] * c0[:, 1])
-        sum21 += np.dot(bhb_V_ee_matrix_new[i, :], c1[i, 0] * c1[:, 0])
-        sum30 += np.dot(bhb_V_ee_matrix_new[i, :], c0[i, 2] * c0[:, 2])
-        sum31 += np.dot(bhb_V_ee_matrix_new[i, :], c1[i, 1] * c1[:, 1])
-        sum32 += np.dot(bhb_V_ee_matrix_new[i, :], c2[i, 0] * c2[:, 0])
-        sum40 += np.dot(bhb_V_ee_matrix_new[i, :], c0[i, 3] * c0[:, 3])
-
-    E_tot10 = N10 * (E_orb10 - sum10 / 2)
-    E_tot20 = N20 * (E_orb20 - sum20 / 2)
-    E_tot21 = N21 * (E_orb21 - sum21 / 2)
-    E_tot30 = N30 * (E_orb30 - sum30 / 2)
-    E_tot31 = N31 * (E_orb31 - sum31 / 2)
-    E_tot32 = N32 * (E_orb32 - sum32 / 2)
-    E_tot40 = N40 * (E_orb40 - sum40 / 2)
-
-    E_tot = E_tot10 + E_tot20 + E_tot21 + E_tot30 + E_tot31 + E_tot32 + E_tot40
-    return E_tot, ryo_ne
+class ConvergenceError(RuntimeError):
+    """The requested SCF tolerance was not reached; no success is reported."""
 
 
-# calculate potential V_ee_dir at transform_coor
-
-def cal_potential(transform_coor, xintervall, tknot, kord, RHS):
-    # Generate B-spline basis and derivatives
-    Bavx, dBavx, dB2avx = bsplgen(xintervall, tknot, kord)
-    dB2_matrix = build_matrix_dB2(xintervall, dB2avx, dBavx)
-
-    Bavx1, dBavx1, dB2avx1 = bsplgen([transform_coor, transform_coor + 1], tknot, kord)
-    B_Gaussian = Bavx1[0, :]
-
-    # Solve the linear system for coefficients
-    c = l_u(dB2_matrix, RHS)
-    dB_end_end_1 = dBavx[-1, -2]
-    dB_end = dBavx[-1, -1]
-    c_end_1 = c[-1]
-
-    c_end = (0 - dB_end_end_1) / dB_end * c_end_1
-    c0 = 0
-    c = np.concatenate([[c0], c, [c_end]])
-
-    # Calculate the potential
-    result = np.dot(B_Gaussian, c)
-    Pot = result / transform_coor
-
-    return Pot
-# the return value maybe Pot and result
-
-# build matrix dB2
-
-def build_matrix_dB2(xintervall, dB2, dB1):
-    # Initialize a square matrix of zeros with size equal to the length of xintervall
-    n = len(xintervall)
-    matrix = np.zeros((n, n))
-
-    # Fill the matrix according to the logic in the MATLAB code
-    for i in range(n - 1):
-        matrix[i, i] = dB2[i, i + 1]
-        matrix[i, i + 1] = dB2[i, i + 2]
-        matrix[i + 1, i] = dB2[i + 1, i + 1]
-
-    # Handle the last element separately
-    matrix[-1, -1] = dB2[-1, -2] - (dB1[-1, -2] * dB2[-1, -1]) / dB1[-1, -1]
-
-    return matrix
-
-# % build matrix B
-
-def build_matrix_B(xintervall, dB2):
-    # Initialize a square matrix of zeros with size equal to the length of xintervall
-    n = len(xintervall)
-    matrix = np.zeros((n, n))
-
-    # Fill the matrix according to the MATLAB logic
-    for i in range(n - 1):
-        matrix[i, i] = dB2[i, i + 1]
-        matrix[i, i + 1] = dB2[i, i + 2]
-        matrix[i + 1, i] = dB2[i + 1, i + 1]
-
-    # Handle the last element separately
-    matrix[-1, -1] = dB2[-1, -2]
-
-    return matrix
+def _positive(value, name):
+    if not np.isscalar(value) or not np.isfinite(value) or value <= 0:
+        raise ValueError(f"{name} must be a finite positive scalar")
 
 
-# % LU factorization
-def l_u(A, B):
-    # Convert A to a sparse matrix
-    A_sparse = csc_matrix(A)
-
-    # Perform LU factorization
-    lu = splu(A_sparse)
-
-    # Solve LY = B
-    Y = lu.L.dot(np.linalg.solve(lu.L.A, B))
-
-    # Solve UX = Y
-    X = np.linalg.solve(lu.U.A, Y)
-
-    return X
-
-# insert extra x coordinate into array, the added x coordinate is not equal to items in
+def _integer(value, name, minimum=1):
+    if isinstance(value, bool) or not isinstance(value, Integral) or value < minimum:
+        raise ValueError(f"{name} must be an integer >= {minimum}")
 
 
-def insert_array(x, xarray):
+def bsplgen(points, knots, order):
+    """Return basis values and first/second derivatives; order = degree + 1."""
+    _integer(order, "order", 3)
+    t = np.asarray(knots, dtype=float)
+    x = np.atleast_1d(np.asarray(points, dtype=float))
+    if t.ndim != 1 or len(t) < 2 * order or not np.all(np.isfinite(t)):
+        raise ValueError("invalid knot vector")
+    if np.any(np.diff(t) < 0) or t[order - 1] >= t[-order]:
+        raise ValueError("knots must be nondecreasing with a nonempty domain")
+    if x.ndim != 1 or not np.all(np.isfinite(x)):
+        raise ValueError("points must be a finite 1-D array")
+    if np.any(x < t[order - 1]) or np.any(x > t[-order]):
+        raise ValueError("points lie outside the spline domain")
+    spline = BSpline(t, np.eye(len(t) - order), order - 1, extrapolate=False)
+    return spline(x), spline(x, nu=1), spline(x, nu=2)
+
+
+@dataclass
+class Result:
+    Z: int
+    occupations: dict
+    alpha: float
+    total_energy: float
+    electron_count: float
+    iterations: int
+    density_residual: float
+    energy_change: float
+    eigen_residual: float
+    orbital_energies: dict
+    radius: np.ndarray
+    weights: np.ndarray
+    radial_density: np.ndarray
+    density: np.ndarray
+    history: list
+
+    def summary(self):
+        return {"Z": self.Z, "occupations": {f"{n}{'spdf'[l]}": v
+                for (n, l), v in self.occupations.items()}, "alpha": self.alpha,
+                "total_energy_hartree": self.total_energy,
+                "electron_count": self.electron_count, "iterations": self.iterations,
+                "density_residual": self.density_residual,
+                "energy_change_hartree": self.energy_change,
+                "relative_eigen_residual": self.eigen_residual,
+                "orbital_energies_hartree": self.orbital_energies,
+                "converged": True}
+
+
+class AtomicSolver:
+    """Finite-box radial B-spline Galerkin discretisation with Gaussian quadrature.
+
+    Orbitals P=rR obey P(0)=P(rmax)=0. Hartree potential u=r*VH obeys
+    u(0)=0, u(rmax)=N. The origin is excluded from quadrature nodes.
     """
-    Inserts a value x into a sorted array xarray at the correct position.
-    The inserted value x should not already exist in the array.
-
-    Parameters:
-    x (float): The value to insert.
-    xarray (list or np.ndarray): The sorted array into which x will be inserted.
-
-    Returns:
-    np.ndarray: A new array with x inserted.
-    """
-    # Ensure xarray is a NumPy array
-    xarray = np.array(xarray)
-
-    # Find the insertion index
-    index = 0
-    for i in range(len(xarray) - 1):
-        if x > xarray[i] and x < xarray[i + 1]:
-            index = i
-            break
-
-    # Insert x at the identified index
-    xarray_insert = np.concatenate((xarray[:index + 1], [x], xarray[index + 1:]))
-
-    return xarray_insert
-
-# calculate P=rR
-
-def cal_eigen(xarray, tknot, kord, Gauss_mat, parameter1, parameter2, l, Z):
-    """
-    Calculate eigenvalues and eigenvectors for the system.
-
-    Parameters:
-    xarray (np.ndarray): Array of x values.
-    tknot (np.ndarray): Knot sequence.
-    kord (int): Order of the B-spline.
-    Gauss_mat (np.ndarray): Gaussian quadrature matrix.
-    parameter1, parameter2 (float): Additional parameters for calculation.
-    l (float): Angular momentum quantum number.
-    Z (float): Nuclear charge.
-
-    Returns:
-    tuple: Eigenvectors (V), eigenvalues (D), bhb_matrix, BB_matrix.
-    """
-    # Initialize BB_matrix
-    BB_matrix = np.zeros((len(tknot) - kord - 2, len(tknot) - kord - 2))
-
-    for j in range(1, len(tknot) - kord - 1):  # MATLAB indices start at 1
-        for i in range(1, len(tknot) - kord - 1):
-            BB_matrix[j - 1, i - 1] = cal_inte_BBinterval(xarray, tknot, kord, i, j, Gauss_mat)
-
-    # Initialize bhb_matrix
-    bhb_matrix = np.zeros((len(tknot) - kord - 2, len(tknot) - kord - 2))
-
-    for j in range(1, len(tknot) - kord - 1):
-        for i in range(1, len(tknot) - kord - 1):
-            bhb_matrix[j - 1, i - 1] = cal_bhb_interval(xarray, tknot, kord, i, j, parameter1, parameter2, Gauss_mat, l, Z)
-
-    # Compute eigenvalues and eigenvectors
-    eigenvalues, eigenvectors = eig(bhb_matrix, BB_matrix)
-
-    return eigenvectors, eigenvalues, bhb_matrix, BB_matrix
-
-# a little difference from the one above
-
-def cal_eigen1(bhb_V_ee_matrix, bhb_matrix, BB_matrix):
-    """
-    Calculate eigenvalues and eigenvectors for a generalized eigenvalue problem.
-
-    Parameters:
-    bhb_V_ee_matrix (np.ndarray): Interaction matrix (e.g., from electron-electron interaction).
-    bhb_matrix (np.ndarray): Original BHB matrix.
-    BB_matrix (np.ndarray): Overlap matrix.
-
-    Returns:
-    tuple: Eigenvectors (V) and eigenvalues (D).
-    """
-    # Combine bhb_V_ee_matrix and bhb_matrix
-    bhb_matrix1 = bhb_V_ee_matrix + bhb_matrix
-    
-    # Solve the generalized eigenvalue problem
-    eigenvalues, eigenvectors = eig(bhb_matrix1, BB_matrix)
-    
-    return eigenvectors, eigenvalues
-
-
-def cal_V_ee_matrix(c, bhb_matrix, c0, c1, c2, N10, N20, N21, N30, N31, N32, N40, charge, epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, Gauss_mat, parameter1, parameter2, l, Z):
-    bhb_V_ee_matrix = np.zeros((len(tknot_P) - kord - 2, len(tknot_P) - kord - 2))
-    
-    for j in range(1, len(tknot_P) - kord - 1):
-        for i in range(1, len(tknot_P) - kord - 1):
-            if bhb_matrix[j-1, i-1] != 0:
-                bhb_V_ee_matrix[j-1, i-1] = cal_bhb_interval1(
-                    c, c0, c1, c2, N10, N20, N21, N30, N31, N32, N40, charge,
-                    epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, i, j,
-                    Gauss_mat, parameter1, parameter2, l, Z
-                )
-    
-    return bhb_V_ee_matrix
-
-# calculate integral of B_iB_j in some interval
-
-def cal_inte_BBinterval(xarray, tknot, kord, index1, index2, Gauss_mat):
-    total_sum = 0
-    for i in range(len(xarray) - 1):
-        a = xarray[i]
-        b = xarray[i + 1]
-        BB = cal_integral(tknot, kord, index1, index2, fun1, Gauss_mat, a, b, 1)
-        total_sum += BB
-    return total_sum
-
-# calculate integral of B_iB_j in some interval
-
-def cal_inte_BBinterval1(c, N10, charge, epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, index1, index2, Gauss_mat):
-    total_sum = 0
-    for i in range(len(xarray_P) - 1):
-        a = xarray_P[i]
-        b = xarray_P[i + 1]
-        BB = cal_integral1(c, N10, charge, epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, index1, index2, fun1, Gauss_mat, a, b, 1)
-        total_sum += BB
-        
-    return total_sum
-
-# calculate integral of B_iHB_j in some interval
-
-def cal_bhb_interval(xarray, tknot, kord, index1, index2, parameter1, parameter2, Gauss_mat, l, Z):
-    total_sum = 0
-    for i in range(len(xarray) - 1):
-        a = xarray[i]
-        b = xarray[i + 1]
-        bhb = cal_BHB(tknot, kord, index1, index2, parameter1, parameter2, a, b, Gauss_mat, l, Z)
-        total_sum += bhb
-        
-    return total_sum
-
-# calculate integral of B_iHB_j in some interval
-
-def cal_bhb_interval1(c, c0, c1, c2, N10, N20, N21, N30, N31, N32, N40, charge, epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, index1, index2, Gauss_mat, parameter1, parameter2, l, Z):
-    total_sum = 0
-    for i in range(len(xarray_P) - 1):
-        a = xarray_P[i]
-        b = xarray_P[i + 1]
-        bhb = cal_BHB1(c, c0, c1, c2, N10, N20, N21, N30, N31, N32, N40, charge, epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, index1, index2, Gauss_mat, a, b, parameter1, parameter2, l, Z)
-        total_sum += bhb
-        
-    return total_sum
-
-# check integral of ryo
-
-def cal_integral_ryo(ryo, xarray):
-    total_sum = 0
-    for i in range(len(xarray) - 1):
-        a = xarray[i]
-        b = xarray[i + 1]
-        total_sum += ryo[i] * a**2 * (b - a)
-
-    integral = total_sum * 4 * np.pi
-    return integral
-
-# % Bi*Bj*fun
-# % Gauss_mat: Gauss with number n
-# % a: smallest limit of integral
-# % b: largest limit of integral
-
-def cal_integral(tknot, kord, index1, index2, fun, Gauss_mat, a, b, choose):
-    total_sum = 0
-    N = Gauss_mat.shape[0]  # Get the number of rows in Gauss_mat
-    
-    for i in range(N):
-        transform_coor = Gauss_mat[i, 0] * (b - a) / 2 + (b + a) / 2
-        Bavx, dBavx, dB2avx = bsplgen([transform_coor, transform_coor + 1], tknot, kord)  # Assume bsplgen returns the correct values
-
-        if choose == 1:
-            total_sum += Bavx[index1] * Bavx[index2] * fun(transform_coor) * Gauss_mat[i, 1]
-        else:
-            total_sum += dBavx[index1] * dBavx[index2] * fun(transform_coor) * Gauss_mat[i, 1]
-
-    integral = (b - a) / 2 * total_sum
-    return integral
-
-
-
-def cal_integral1(c, c0, c1, c2, N10, N20, N21, N30, N31, N32, N40, charge, epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, index1, index2, fun, Gauss_mat, a, b, choose):
-    total_sum = 0
-    N = Gauss_mat.shape[0]  # Get the number of rows in Gauss_mat
-
-    for i in range(N):
-        transform_coor = Gauss_mat[i, 0] * (b - a) / 2 + (b + a) / 2
-
-        Bavx, dBavx, dB2avx = bsplgen([transform_coor, transform_coor + 1], tknot_P, kord)  # Assuming bsplgen returns the correct values
-        
-        B_Gaussian = Bavx[0, :]
-        result = np.dot(B_Gaussian, c)
-        Pot = result / transform_coor
-        V_ee_dir = Pot
-
-        P10_Gaussian = Bavx[0, 1:-1] @ c0[:, 0]
-        P20_Gaussian = Bavx[0, 1:-1] @ c0[:, 1]
-        P21_Gaussian = Bavx[0, 1:-1] @ c1[:, 0]
-        P30_Gaussian = Bavx[0, 1:-1] @ c0[:, 2]
-        P31_Gaussian = Bavx[0, 1:-1] @ c1[:, 1]
-        P32_Gaussian = Bavx[0, 1:-1] @ c2[:, 0]
-        P40_Gaussian = Bavx[0, 1:-1] @ c0[:, 3]
-
-        ryo_ne_Gaussian = (1 / (4 * np.pi)) * charge * (
-            N10 * (P10_Gaussian / transform_coor) ** 2 +
-            N20 * (P20_Gaussian / transform_coor) ** 2 +
-            N21 * (P21_Gaussian / transform_coor) ** 2 +
-            N30 * (P30_Gaussian / transform_coor) ** 2 +
-            N31 * (P31_Gaussian / transform_coor) ** 2 +
-            N32 * (P32_Gaussian / transform_coor) ** 2 +
-            N40 * (P40_Gaussian / transform_coor) ** 2
-        )
-
-        V_ee_exch = -3 * charge / (4 * np.pi * epsilon0) * (3 * ryo_ne_Gaussian / (charge * 8 * np.pi)) ** (1 / 3)
-
-        V_ee = V_ee_dir + V_ee_exch
-
-        if choose == 1:
-            total_sum += Bavx[0, index1] * Bavx[0, index2] * fun(transform_coor) * Gauss_mat[i, 1]
-        elif choose == 2:
-            total_sum += dBavx[0, index1] * dBavx[0, index2] * fun(transform_coor) * Gauss_mat[i, 1]
-        else:
-            total_sum += Bavx[0, index1] * Bavx[0, index2] * V_ee * Gauss_mat[i, 1]
-
-    V_integral = (b - a) / 2 * total_sum
-    return V_integral
-
-def fun1(x):
-    return 1
-
-def fun2(x):
-    return 1 / x**2
-
-def fun3(x):
-    return 1 / x
-
-# bhb include V_ee
-
-def cal_BHB1(c, c0, c1, c2, N10, N20, N21, N30, N31, N32, N40, charge, epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, index1, index2, Gauss_mat, a, b, parameter1, parameter2, l, Z):
-    item4 = charge * cal_integral1(c, c0, c1, c2, N10, N20, N21, N30, N31, N32, N40, charge, epsilon0, xarray_P, xarray_V, tknot_V, tknot_P, kord, index1, index2, fun1, Gauss_mat, a, b, 3)
-    
-    bhb = item4
-    return bhb
-
-
-def cal_BHB(tknot, kord, index1, index2, parameter1, parameter2, a, b, Gauss_mat, l, Z):
-    item1 = parameter1 * cal_integral(tknot, kord, index1, index2, fun1, Gauss_mat, a, b, 2)
-    item2 = parameter1 * l * (l + 1) * cal_integral(tknot, kord, index1, index2, fun2, Gauss_mat, a, b, 1)
-    item3 = -Z * parameter2 * cal_integral(tknot, kord, index1, index2, fun3, Gauss_mat, a, b, 1)
-    
-    bhb = item1 + item2 + item3
-    return bhb
-
-# % row of Bavx: the value of Bi at a knotpoint
-# % column of Bavx: basis function
-
-def bsplgen(xintervall, tknot, kord):
-    istart = 0
-    islut = len(tknot) - kord
-
-    punkter = len(xintervall)
-    Bavx = np.zeros((punkter, islut))
-    dBavx = np.zeros((punkter, islut))
-    dB2avx = np.zeros((punkter, islut))
-    
-    xnr = 0
-
-    for x in xintervall:
-        B = np.zeros((len(tknot), kord))
-        xnr += 1
-
-        for k in range(1, kord + 1):
-            for i in range(istart, islut):
-                if k == 1:
-                    if tknot[i] < x < tknot[i + 1]:
-                        B[i, 0] = 1
-                    elif tknot[i] == x < tknot[i + 1]:
-                        B[i, 0] = 1
-                    else:
-                        B[i, 0] = 0
-                elif k > 1:
-                    if i < kord - k + 1:  
-                        B[i, k - 1] = 0
-                    elif B[i, k - 2] == 0 and tknot[i + k - 1] - tknot[i] == 0:
-                        if B[i + 1, k - 2] == 0:
-                            B[i, k - 1] = 0
-                        else:
-                            B[i, k - 1] = (tknot[i + k] - x) / (tknot[i + k] - tknot[i + 1]) * B[i + 1, k - 2]
-                            if k == kord:
-                                dBavx[xnr - 1, i] = (k - 1) * (0 - B[i + 1, k - 2] / (tknot[i + k] - tknot[i + 1]))
-                    elif B[i + 1, k - 2] == 0 and tknot[i + k] - tknot[i + 1] == 0:
-                        B[i, k - 1] = (x - tknot[i]) / (tknot[i + k - 1] - tknot[i]) * B[i, k - 2]
-                        if k == kord:
-                            dBavx[xnr - 1, i] = (k - 1) * (B[i, k - 2] / (tknot[i + k - 1] - tknot[i]) - 0)
-                    else:
-                        B[i, k - 1] = (x - tknot[i]) / (tknot[i + k - 1] - tknot[i]) * B[i, k - 2] + \
-                                      (tknot[i + k] - x) / (tknot[i + k] - tknot[i + 1]) * B[i + 1, k - 2]
-                        if k == kord:
-                            dBavx[xnr - 1, i] = (k - 1) * (B[i, k - 2] / (tknot[i + k - 1] - tknot[i]) -
-                                                            B[i + 1, k - 2] / (tknot[i + k] - tknot[i + 1]))
-    if k == kord:
-          if B[i, k - 2] != 0:
-             dB2avx[xnr - 1, i] = (k - 1) * (k - 2) * B[i, k - 2] / \
-                             ((tknot[i + k - 1] - tknot[i]) * (tknot[i + k - 2] - tknot[i]))
-
-    if B[i + 1, k - 2] != 0:
-        dB2avx[xnr - 1, i] -= (k - 1) * (k - 2) * (
-            B[i + 1, k - 2] / ((tknot[i + k - 1] - tknot[i]) * (tknot[i + k - 1] - tknot[i + 1])) +
-            B[i + 1, k - 2] / ((tknot[i + k] - tknot[i + 1]) * (tknot[i + k - 1] - tknot[i + 1]))
-        )
-
-    if B[i + 2, k - 2] != 0:
-        dB2avx[xnr - 1, i] += (k - 1) * (k - 2) * B[i + 2, k - 2] / \
-                              ((tknot[i + k] - tknot[i + 1]) * (tknot[i + k] - tknot[i + 2]))
-        
-
-        for indexi in range(istart, islut):
-         if (xnr == len(xintervall) and indexi == islut - 1):
-            Bavx[xnr - 1, indexi] = 1
-            
-            dBavx[xnr - 1, indexi] = (kord - 1) / (tknot[len(tknot) - 1] - tknot[islut])
-            
-            dB2avx[xnr - 1, indexi] = (kord - 1) * (kord - 2) / \
-                ((tknot[len(tknot) - 1] - tknot[islut]) * (tknot[len(tknot) - 2] - tknot[islut]))
-
-    elif (xnr == len(xintervall) and indexi == islut - 2):
-        dBavx[xnr - 1, indexi] = -(kord - 1) / (tknot[len(tknot) - 1] - tknot[islut])
-        dB2avx[xnr - 1, indexi] = -(kord - 1) * (kord - 2) / \
-            ((tknot[len(tknot) - 1] - tknot[islut]) * (tknot[len(tknot) - 2] - tknot[islut])) \
-            - (kord - 1) * (kord - 2) / \
-            ((tknot[len(tknot) - 1] - tknot[islut - 1]) * (tknot[len(tknot) - 2] - tknot[islut]))
-
-    elif (xnr == len(xintervall) and indexi == islut - 3):
-        dB2avx[xnr - 1, indexi] = (kord - 1) * (kord - 2) / \
-            ((tknot[len(tknot) - 1] - tknot[islut - 1]) * (tknot[len(tknot) - 1] - tknot[islut]))
-
-    else:
-        Bavx[xnr - 1, indexi] = B[indexi, kord - 1]
-	    
+    def __init__(self, Z, *, rmax=35.0, intervals=100, order=4,
+                 quadrature=8, stretch=5.0, alpha=1.0):
+        _integer(Z, "Z")
+        _integer(intervals, "intervals", 8)
+        _integer(order, "order", 3)
+        _integer(quadrature, "quadrature", order)
+        _positive(rmax, "rmax")
+        _positive(stretch, "stretch")
+        if stretch > 20:
+            raise ValueError("stretch > 20 creates numerically degenerate knots")
+        if not np.isscalar(alpha) or not np.isfinite(alpha) or alpha < 0:
+            raise ValueError("alpha must be finite and nonnegative")
+        self.Z, self.alpha, self.rmax, self.order = int(Z), float(alpha), float(rmax), order
+        grid = rmax * np.expm1(stretch * np.linspace(0, 1, intervals + 1)) / np.expm1(stretch)
+        self.knots = np.r_[np.repeat(0.0, order - 1), grid,
+                           np.repeat(rmax, order - 1)]
+        g, w = np.polynomial.legendre.leggauss(quadrature)
+        widths = np.diff(grid)
+        self.r = (grid[:-1, None] + widths[:, None] * (g + 1) / 2).ravel()
+        self.w = (widths[:, None] * w / 2).ravel()
+        full, dfull, _ = bsplgen(self.r, self.knots, order)
+        self.full = full
+        self.B, self.dB = full[:, 1:-1], dfull[:, 1:-1]
+        self.S = self.B.T @ (self.w[:, None] * self.B)
+        self.T = 0.5 * self.dB.T @ (self.w[:, None] * self.dB)
+        K = dfull.T @ (self.w[:, None] * dfull)
+        self._poisson = cho_factor(K[1:-1, 1:-1])
+        self._boundary = K[1:-1, -1]
+        self._core = {}
+
+    def matrix(self, potential):
+        v = np.asarray(potential, dtype=float)
+        if v.shape != self.r.shape or not np.all(np.isfinite(v)):
+            raise ValueError("potential must be finite and match the quadrature grid")
+        return self.B.T @ ((self.w * v)[:, None] * self.B)
+
+    def core(self, l):
+        _integer(l, "l", 0)
+        if l not in self._core:
+            self._core[l] = self.T + self.matrix(l * (l + 1) / (2 * self.r**2) - self.Z / self.r)
+        return self._core[l]
+
+    def solve_channel(self, l, potential, count):
+        _integer(count, "count")
+        if count > self.S.shape[0]:
+            raise ValueError("more orbitals requested than basis functions")
+        H = self.core(l) + self.matrix(potential)
+        energy, coefficients = eigh(H, self.S, subset_by_index=(0, count - 1))
+        residual = H @ coefficients - (self.S @ coefficients) * energy
+        relative = np.linalg.norm(residual) / max(1.0, np.linalg.norm(H @ coefficients))
+        return energy, coefficients, float(relative)
+
+    def hydrogenic(self, l=0, count=3):
+        """Nuclear-only benchmark; no Hartree or exchange contribution."""
+        return self.solve_channel(l, np.zeros_like(self.r), count)
+
+    def hartree(self, radial_density):
+        """Solve -u'' = q/r, q=4*pi*r^2*rho, with finite-box Coulomb boundary."""
+        q = np.asarray(radial_density, dtype=float)
+        if q.shape != self.r.shape or not np.all(np.isfinite(q)) or np.any(q < 0):
+            raise ValueError("radial density must be finite, nonnegative and match grid")
+        electrons = float(self.w @ q)
+        rhs = self.B.T @ (self.w * q / self.r) - self._boundary * electrons
+        coeff = np.r_[0.0, cho_solve(self._poisson, rhs), electrons]
+        return (self.full @ coeff) / self.r
+
+    def exchange(self, radial_density):
+        """X-alpha potential; exchange energy is (3/4) integral rho*vx d^3r."""
+        q = np.asarray(radial_density, dtype=float)
+        if q.shape != self.r.shape or not np.all(np.isfinite(q)) or np.any(q < 0):
+            raise ValueError("invalid radial density")
+        rho = q / (4 * np.pi * self.r**2)
+        vx = -1.5 * self.alpha * np.cbrt(3 * rho / np.pi)
+        return vx, float(0.75 * self.w @ (q * vx))
+
+    def _occupations(self, occupations):
+        if not isinstance(occupations, dict) or not occupations:
+            raise ValueError("occupations must be a nonempty {(n,l): count} dictionary")
+        clean = {}
+        for key, value in occupations.items():
+            if not isinstance(key, tuple) or len(key) != 2:
+                raise ValueError("orbital keys must be (n,l) tuples")
+            n, l = key
+            _integer(n, "n")
+            _integer(l, "l", 0)
+            if l >= n or l > 3:
+                raise ValueError("require 0 <= l < n and l <= 3")
+            _positive(value, "occupation")
+            if value > 2 * (2 * l + 1):
+                raise ValueError("occupation exceeds subshell capacity")
+            clean[(int(n), int(l))] = float(value)
+        return clean
+
+    def _orbitals(self, occupations, potential):
+        q = np.zeros_like(self.r)
+        one_body = 0.0
+        levels = {}
+        residual = 0.0
+        for l in sorted({l for n, l in occupations}):
+            count = max(n - l for n, ll in occupations if ll == l)
+            energies, coefficients, err = self.solve_channel(l, potential, count)
+            residual = max(residual, err)
+            for (n, ll), occupation in occupations.items():
+                if ll != l:
+                    continue
+                c = coefficients[:, n - l - 1]
+                orbital = self.B @ c
+                q += occupation * orbital**2
+                one_body += occupation * float(c @ self.core(l) @ c)
+                levels[f"{n}{'spdf'[l]}"] = float(energies[n - l - 1])
+        return q, one_body, levels, residual
+
+    def solve(self, occupations, *, mixing=0.3, tolerance=1e-8,
+              energy_tolerance=1e-9, max_iterations=400):
+        """Converge density and total energy, or raise ConvergenceError.
+
+        mixing is the fraction of NEW density. Fixed subshell occupations are
+        supplied by the caller; this is not an automatic ground-state search.
+        """
+        occ = self._occupations(occupations)
+        if not np.isscalar(mixing) or not np.isfinite(mixing) or not 0 < mixing <= 1:
+            raise ValueError("mixing must be in (0,1]")
+        _positive(tolerance, "tolerance")
+        _positive(energy_tolerance, "energy_tolerance")
+        _integer(max_iterations, "max_iterations")
+        expected = sum(occ.values())
+        q, _, _, _ = self._orbitals(occ, np.zeros_like(self.r))
+        previous_energy = None
+        history = []
+        for iteration in range(1, max_iterations + 1):
+            potential = self.hartree(q) + self.exchange(q)[0]
+            new_q, one_body, levels, eigen_residual = self._orbitals(occ, potential)
+            vh = self.hartree(new_q)
+            energy = float(one_body + 0.5 * self.w @ (new_q * vh) + self.exchange(new_q)[1])
+            residual = float(self.w @ np.abs(new_q - q) / expected)
+            change = float(abs(energy - previous_energy)) if previous_energy is not None else None
+            if not np.isfinite(energy) or not np.isfinite(residual):
+                raise FloatingPointError("non-finite SCF result")
+            history.append({"iteration": iteration, "energy_hartree": energy,
+                            "density_residual": residual, "energy_change": change})
+            if change is not None and residual < tolerance and change < energy_tolerance:
+                count = float(self.w @ new_q)
+                if abs(count - expected) > 1e-7 * max(1, expected):
+                    raise ArithmeticError("electron normalisation failed")
+                return Result(self.Z, occ, self.alpha, energy, count, iteration,
+                              residual, change, eigen_residual, levels,
+                              self.r.copy(), self.w.copy(), new_q,
+                              new_q / (4 * np.pi * self.r**2), history)
+            q = (1 - mixing) * q + mixing * new_q
+            previous_energy = energy
+        raise ConvergenceError(f"SCF did not converge after {max_iterations} iterations; "
+                               f"density residual={residual:.3g}, energy change={change}")
+
+
+CONFIGURATIONS = {
+    "He": (2, {(1, 0): 2}),
+    "He+": (2, {(1, 0): 1}),
+    "Ne": (10, {(1, 0): 2, (2, 0): 2, (2, 1): 6}),
+    "Ne+": (10, {(1, 0): 2, (2, 0): 2, (2, 1): 5}),
+    "K": (19, {(1, 0): 2, (2, 0): 2, (2, 1): 6, (3, 0): 2, (3, 1): 6, (4, 0): 1}),
+    "K+": (19, {(1, 0): 2, (2, 0): 2, (2, 1): 6, (3, 0): 2, (3, 1): 6}),
+}
